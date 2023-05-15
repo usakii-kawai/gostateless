@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 )
+
+var once sync.Once
 
 func Start(ctx context.Context, host, port string, reg registry.Registration, registerHandlersFunc func()) (context.Context, error) {
 	registerHandlersFunc()
@@ -25,11 +28,15 @@ func startService(ctx context.Context, serviceName registry.ServiceName, host, p
 
 	go func() {
 		log.Println(srv.ListenAndServe())
-		fmt.Println("try to in delete2:", fmt.Sprintf("http://%s:%s", host, port))
-		err := registry.ShutdownService(fmt.Sprintf("http://%s:%s", host, port))
-		if err != nil {
-			log.Println(err)
-		}
+
+		once.Do(func() {
+			fmt.Println("try to in delete:", fmt.Sprintf("http://%s:%s", host, port))
+			err := registry.ShutdownService(fmt.Sprintf("http://%s:%s", host, port))
+			if err != nil {
+				log.Println(err)
+			}
+		})
+
 		cancel()
 	}()
 
@@ -37,11 +44,15 @@ func startService(ctx context.Context, serviceName registry.ServiceName, host, p
 		fmt.Printf("%v started. Press any key to stop.\n", serviceName)
 		var s string
 		fmt.Scanln(&s)
-		fmt.Println("try to in delete1:", fmt.Sprintf("http://%s:%s", host, port))
-		err := registry.ShutdownService(fmt.Sprintf("http://%s:%s", host, port))
-		if err != nil {
-			log.Println(err)
-		}
+
+		once.Do(func() {
+			fmt.Println("try to in deletes:", fmt.Sprintf("http://%s:%s", host, port))
+			err := registry.ShutdownService(fmt.Sprintf("http://%s:%s", host, port))
+			if err != nil {
+				log.Println(err)
+			}
+		})
+
 		srv.Shutdown(ctx)
 		cancel()
 	}()
