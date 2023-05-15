@@ -30,6 +30,7 @@ func startService(ctx context.Context, serviceName registry.ServiceName, host, p
 		if err != nil {
 			log.Println(err)
 		}
+		cancel()
 	}()
 
 	go func() {
